@@ -34,9 +34,10 @@ trait NodeScala {
    *  @param response     the response to write back
    */
   private def respond(exchange: Exchange, token: CancellationToken, response: Response): Unit = {
-    while (token.nonCancelled && response.hasNext) {
-      exchange write response.next
-    }
+//    while (token.nonCancelled && response.hasNext) {
+//      exchange write response.next
+//    }
+    response.takeWhile(r => token.nonCancelled).foreach(exchange.write)
     exchange.close()
   }
 

@@ -81,25 +81,35 @@ object WikipediaSuggest extends SimpleSwingApplication with ConcreteSwingApi wit
      */
 
     // TO IMPLEMENT
-    val searchTerms: Observable[String] = ???
+    val searchTerms: Observable[String] = searchTermField.textValues
 
     // TO IMPLEMENT
-    val suggestions: Observable[Try[List[String]]] = ???
+    val suggestions: Observable[Try[List[String]]] = searchTerms.sanitized.concatRecovered(wikiSuggestResponseStream)
+
 
     // TO IMPLEMENT
     val suggestionSubscription: Subscription =  suggestions.observeOn(eventScheduler) subscribe {
-      x => ???
+      list => list match {
+        case Success(s) => suggestionList.listData = s
+        case Failure(er) => status.text = er.getMessage
+      }
     }
 
     // TO IMPLEMENT
-    val selections: Observable[String] = ???
+    val selections: Observable[String] = button.clicks flatMap  { _ =>
+      if (suggestionList.selection.items.isEmpty) Observable.error(new Exception("NoSelection"))
+      else Observable.just(suggestionList.selection.items(0))
+    }
 
     // TO IMPLEMENT
-    val pages: Observable[Try[String]] = ???
+    val pages: Observable[Try[String]] = selections.concatRecovered(wikiPageResponseStream)
 
     // TO IMPLEMENT
     val pageSubscription: Subscription = pages.observeOn(eventScheduler) subscribe {
-      x => ???
+      x => x match {
+        case Success(result) => editorpane.text = result
+        case Failure(er) => editorpane.text = er.getMessage
+      }
     }
 
   }
